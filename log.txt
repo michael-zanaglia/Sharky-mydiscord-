@@ -1,0 +1,9 @@
+Serveur en écoute sur 10.10.78.149:9531
+adresse recu : ('10.10.78.129', 54135)
+Bienvenue a l'addresse : ('10.10.78.129', 54135)
+Nouveau client connecté : ('10.10.78.129', 54135)
+
+
+not self operating systeme / computational/calculational device / programmable device
+ needs to get instructions from someone ==> developer or programmer 0> a program a ser of instructions that can be executed by computer 
+todo a specific task > to program u need a programming language like python
