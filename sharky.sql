@@ -1,6 +1,6 @@
 -- MySQL dump 10.13  Distrib 8.0.36, for Win64 (x86_64)
 --
--- Host: localhost    Database: mydiscord
+-- Host: localhost    Database: michael_zanaglia
 -- ------------------------------------------------------
 -- Server version	8.0.36
 
@@ -27,9 +27,8 @@ CREATE TABLE `acces` (
   `name` text NOT NULL,
   `password` text NOT NULL,
   `mail` text,
-  PRIMARY KEY (`ID`),
-  CONSTRAINT `acces_chk_1` CHECK ((`mail` like _utf8mb4'%@%'))
-) ENGINE=InnoDB AUTO_INCREMENT=38 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+  PRIMARY KEY (`ID`)
+) ENGINE=InnoDB AUTO_INCREMENT=38 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -54,7 +53,7 @@ CREATE TABLE `img` (
   `pseudo` varchar(255) NOT NULL,
   `base64` text NOT NULL,
   PRIMARY KEY (`ID`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --

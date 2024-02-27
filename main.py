@@ -22,6 +22,7 @@ class Py() :
         self.L = L
         self.screen = pygame.display.set_mode((self.L, self.l))
         self.txt_chat = ""
+        self.pseudo, self.mail = self.WritePseudo()
 
         
         
@@ -45,13 +46,12 @@ class Py() :
         
     
     def Text(self) :
-        pseudo = self.WritePseudo()
         font = pygame.font.SysFont(None, 30)
-        if len(pseudo) > 12 :
+        if len(self.pseudo) > 12 :
             font_p = pygame.font.SysFont(None, 25)
         else :
             font_p = font
-        pseudo_txt = font_p.render(pseudo, True, (250,250,250))
+        pseudo_txt = font_p.render(self.pseudo, True, (250,250,250))
         voc_txt = font.render("# Channels Vocaux", True, (250,250,250))
         chat_txt = font.render("# Channels Textuels", True, (250,250,250))
         
@@ -61,9 +61,8 @@ class Py() :
     
     def WritePseudo(self) :
         with open("pseudo.json", "r") as p :
-            pseudo = json.load(p)
-        for x in pseudo :
-            return x
+            pseudo_mail = json.load(p)
+        return pseudo_mail
     
     def TextSaloon(self, hoover) : 
         chat_img = pygame.image.load(r"img/chat.png")
@@ -231,21 +230,38 @@ class Py() :
     def VarMute(self, number) :
         with open(".mute", "w") as m :
             m.write(number)
+    
+    def ConnectedUser(self, img) :
+        #global bool, called
+        img = self.Profile(img)
+        #self.Regroup(bool, called)
+        self.screen.blit(img, (400,400))
+        pygame.display.update()
+        
             
 
 
 class Connexion() :
     def __init__(self) :
         self.conn = mysql.connector.connect(
-            user = "root",
-            passwd = "votremdp",
-            host = "localhost",
-            database = "mydiscord"
+            user = "michael_zanaglia",
+            passwd = "PhDxDGc6",
+            host = "cannes-mysql.local",
+            database = "michael_zanaglia"
         )
         self.cursor = self.conn.cursor()
+    
+    def SupprimerLigneRun(self):
+        self.cursor.execute("delete from run where pseudo = '{}'".format(p.mail))
+        self.conn.commit()
+    
+    #def RecupererMail(self) :
+        #self.cursor.execute("select mail from acces where pseudo = '{}'".format(p.WritePseudo()))
+        #self.mail = self.cursor.fetchall()
+        #self.mail = self.mail[0][0]
         
     def RecupererBase64(self) :
-        self.cursor.execute("select base64 from img where pseudo = '{}'".format(p.WritePseudo()))
+        self.cursor.execute("select base64 from img where pseudo = '{}'".format(p.mail))
         self.base = self.cursor.fetchall()
         return self.base[0][0]
     
@@ -269,11 +285,30 @@ class Connexion() :
             image.save(buffered, format=ext)
             img_str = base64.b64encode(buffered.getvalue())
             img_str=str(img_str).replace("b'",'').replace("'",'')
-            print(img_str)
-            self.cursor.execute("update img set base64 = '{}' where pseudo = '{}'".format(img_str, p.WritePseudo()))
+            #print(img_str)
+            self.cursor.execute("update img set base64 = '{}' where pseudo = '{}'".format(img_str, p.mail))
             self.conn.commit()
         except :
             pass
+    
+    def WhosConnected(self) :
+        self.cursor.execute("select pseudo from run")
+        self.liste_mail = self.cursor.fetchall()
+        self.conn.commit()
+        for x in self.liste_mail :
+            index = self.liste_mail.index(x)
+            user = self.liste_mail[index][0]
+            if len(user) > 1 :
+                if user != p.mail :
+                    self.cursor.execute("select base64 from img where pseudo = '{}'".format(user))
+                    self.img = self.cursor.fetchall()
+                    self.img = self.img[0][0]
+                    p.ConnectedUser(self.img)
+            else :
+                p.ShowScreen()
+                pygame.display.update()
+                
+                
         
     
 setting = False
@@ -300,6 +335,9 @@ p.ChatBox(bool_for_box, chatting)
 
 while running :
     
+    ###### VERIFIER LA TABLE run ET SI JE VOIS UN MAIL QUI N'EST PAS LE MIEN JE PRINT L'IMAGE DU MAIL EN QUESTION
+    co.WhosConnected()
+    
     for event in pygame.event.get() :
         if event.type == pygame.QUIT :
             running = False
@@ -324,6 +362,7 @@ while running :
                     pygame.display.update()
                     pygame.time.delay(1000)
                     subprocess.Popen(["python", "connect.py"])
+                    co.SupprimerLigneRun()
                     pygame.quit()
                     sys.exit()
                     #revenir sur l'ecran de connexion
@@ -392,10 +431,13 @@ while running :
                 p.TextSaloon(ind)
         if event.type == pygame.KEYDOWN and not active and not setting :
             p.TextInput(event, bool_for_box)
+            
     pygame.display.flip()
     
 # 10.10.85.129
 print("bye")
 subprocess.Popen(["python", "Server2.py"]).terminate()
+co.SupprimerLigneRun()
 pygame.quit()
 sys.exit()
+

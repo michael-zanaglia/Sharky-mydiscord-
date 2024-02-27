@@ -69,7 +69,7 @@ class Client:
 
 def main():
     # Specify the server's address and port
-    server_address = 'votre adresse serveur' # modifier #####################
+    server_address = '10.10.90.46' # modifier #####################
     server_port = 5555
 
     # Create an instance of the Client class

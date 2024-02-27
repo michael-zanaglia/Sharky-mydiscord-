@@ -5,9 +5,9 @@ import re
 import sys
 import subprocess
 import json
+import hashlib
 
 
-#HOST =  socket.gethostbyname(socket.gethostname())
 #PORT = 9531
 #client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 #client.connect((HOST, PORT))
@@ -21,15 +21,16 @@ class Connexion() :
     
     def __init__(self) :
         self.conn = mysql.connector.connect(
-            user = "root",
-            passwd = "mdp",
-            host = "localhost",
-            database = "mydiscord"
+            user = "michael_zanaglia",
+            passwd = "PhDxDGc6",
+            host = "cannes-mysql.local",
+            database = "michael_zanaglia"
         )
         self.cursor = self.conn.cursor()
         self.l_name = []
         self.l_mdp = []
         self.l_mail = [] 
+        self.HOST =  socket.gethostbyname(socket.gethostname())
         
     def TakeDataFromAccesTable(self) :
         self.name_acces = self.cursor.execute("select name from acces")
@@ -49,22 +50,29 @@ class Connexion() :
         if mail in self.l_mail :
             p.LabelError("Erreur le mail existe deja.", True)
         elif p.spe == [] or len(password) < 8 :
-            pygame.draw.rect(p.screen, (100, 100, 255), pygame.Rect(100, 590, 400, p.label_co.get_height()))
+            pygame.draw.rect(p.screen, (100, 100, 255), pygame.Rect(100, 590, 400, p.label_error.get_height()))
             p.LabelError("Votre mot de passe doit contenir au moins 8 caracteres dont au moins 1 spécial.", False)
         else :   
-            try :
-                pygame.draw.rect(p.screen, (100, 100, 255), pygame.Rect(100, 560, 600, 50))
-                pygame.draw.rect(p.screen, (100, 50, 255), pygame.Rect(700, 560, 20, 50))
-                self.cursor.execute("insert into acces (name, password, mail) values ('{}', '{}', '{}')".format(name, password, mail))
-                self.conn.commit()
-                p.LabelConnected("Bienvenue chez Sharky ! Vous pouvez vous connecter.", False)
-                base64 = self.VarBse()
-                self.cursor.execute("insert into img (pseudo, base64) values ('{}', '{}')".format(name, base64))
-                p.spe = []
-                pygame.time.delay(500)
-            except :
+            regular = r'^[\w\.-]+@[\w\.-]+\.\w+$'
+            if re.match(regular, mail) :
+                try :
+                    pygame.draw.rect(p.screen, (100, 100, 255), pygame.Rect(100, 560, 600, 50))
+                    pygame.draw.rect(p.screen, (100, 50, 255), pygame.Rect(700, 560, 20, 50))
+                    password = hashlib.sha256(password.encode()).hexdigest()
+                    self.cursor.execute("insert into acces (name, password, mail) values ('{}', '{}', '{}')".format(name, password, mail))
+                    self.conn.commit()
+                    p.LabelConnected("Bienvenue chez Sharky ! Vous pouvez vous connecter.", False)
+                    base64 = self.VarBse()
+                    self.cursor.execute("insert into img (pseudo, base64) values ('{}', '{}')".format(mail, base64))
+                    self.conn.commit()
+                    p.spe = []
+                    pygame.time.delay(500)
+                except :
+                    p.LabelError("Entrer un mail valide.", True)
+                self.TakeDataFromAccesTable()
+            else :
                 p.LabelError("Entrer un mail valide.", True)
-            self.TakeDataFromAccesTable()
+                
     
     def VarBse(self) :
         with open(".defaultimg", "r") as f :
@@ -85,7 +93,7 @@ class Formulaire() :
         if conn :
             if self.mail in connect.l_mail :
                 index = connect.l_mail.index(self.mail)
-                if self.mdp == connect.l_mdp[index] and  self.nom == connect.l_name[index] :
+                if (hashlib.sha256(self.mdp.encode()).hexdigest() == connect.l_mdp[index] or self.mdp == connect.l_mdp[index]) and  self.nom == connect.l_name[index] :
                     check = True
                 else :
                     p.LabelConnected("Connexion échouée.", True)
@@ -95,9 +103,11 @@ class Formulaire() :
                 p.LabelConnected("Connexion réussie !", True)
                 pygame.display.update()
                 pygame.time.delay(1000)
-                self.RegisterOnJson(self.nom)
+                self.RegisterOnJson(self.nom, self.mail)
                 subprocess.Popen(["python", "main.py"])
-                subprocess.Popen(["python", "server.py"])
+                subprocess.Popen(["python", "Server2.py"])
+                connect.cursor.execute("insert into run (pseudo, ip) values ('{}', '{}')".format(self.mail, connect.HOST))
+                connect.conn.commit()
                 #subprocess.Popen(["python", "vocal.py"])
                 pygame.quit()
                 sys.exit()
@@ -109,9 +119,10 @@ class Formulaire() :
             else :
                 connect.NewSubscriber(self.nom, self.mdp, self.mail)
     
-    def RegisterOnJson(self, nom) :
+    def RegisterOnJson(self, nom, mail) :
         put_in = []
         put_in.append(nom)
+        put_in.append(mail)
         with open("pseudo.json", "w") as p :
             json.dump(put_in, p, indent=4) 
         
@@ -146,7 +157,7 @@ class Py() :
         if bool :
             font = pygame.font.SysFont(None, 30)
             self.label_error = font.render(txt, True, (255,0,0))
-            pygame.draw.rect(self.screen, (100, 100, 255), pygame.Rect(300, 590, 400, self.label_co.get_height()))
+            pygame.draw.rect(self.screen, (100, 100, 255), pygame.Rect(300, 590, 400, self.label_error.get_height()))
             self.screen.blit(self.label_error, (400, 560))
         else :
             font = pygame.font.SysFont(None, 24)
